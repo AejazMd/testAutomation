@@ -1,9 +1,10 @@
 import pytest
+import os
 from selenium import webdriver
 
-# Dummy test data
-valid_username = 'testuser'
-valid_password = 'password123'
+# Environment variables for login credentials
+valid_username = os.getenv('VALID_USERNAME')
+valid_password = os.getenv('VALID_PASSWORD')
 invalid_username = 'wronguser'
 invalid_password = 'wrongpass'
 
@@ -13,22 +14,25 @@ def setup_driver():
     yield driver
     driver.quit()
 
-# Positive test case for login
-@pytest.mark.parametrize('username, password', [(valid_username, valid_password)])
-def test_login_positive(setup_driver, username, password):
+# Parameterized tests for login scenarios
+@pytest.mark.parametrize('username,password,should_pass', [
+    (valid_username, valid_password, True),
+    (invalid_username, invalid_password, False),
+])
+def test_login(setup_driver, username, password, should_pass):
     driver = setup_driver
-    driver.get('http://example.com/login')
+    driver.get(os.getenv('LOGIN_URL'))
     driver.find_element_by_name('username').send_keys(username)
     driver.find_element_by_name('password').send_keys(password)
     driver.find_element_by_name('login').click()
-    assert 'Dashboard' in driver.title
+    if should_pass:
+        assert 'Dashboard' in driver.title, "Login should succeed but didn't."
+    else:
+        assert 'Invalid credentials' in driver.page_source, "Login should fail but succeeded."
 
-# Negative test case for login
-@pytest.mark.parametrize('username, password', [(invalid_username, invalid_password)])
-def test_login_negative(setup_driver, username, password):
+# Add tests for specific dashboard functionalities
+def test_dashboard_elements(setup_driver):
     driver = setup_driver
-    driver.get('http://example.com/login')
-    driver.find_element_by_name('username').send_keys(username)
-    driver.find_element_by_name('password').send_keys(password)
-    driver.find_element_by_name('login').click()
-    assert 'Invalid credentials' in driver.page_source
+    driver.get(os.getenv('DASHBOARD_URL'))
+    assert driver.find_element_by_id('welcome-message').is_displayed(), "Welcome message should be displayed."
+    assert driver.find_element_by_id('logout-button').is_displayed(), "Logout button should be displayed."

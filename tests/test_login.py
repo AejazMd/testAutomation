@@ -1,6 +1,7 @@
 import pytest
 from selenium import webdriver
 
+#changes done to update the manual branch
 # Dummy test data
 valid_username = 'testuser'
 valid_password = 'password123'
